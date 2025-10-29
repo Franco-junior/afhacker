@@ -3,9 +3,15 @@
 [![Python](https://img.shields.io/badge/Python-3.9+-green)](https://www.python.org/)
 [![Nmap](https://img.shields.io/badge/Nmap-Required-blue)](https://nmap.org/)
 
+## 👥 Autor
+
+- **Anderson Franco** - Avaliação Final de Tecnologias Hacker
+
 ## 📋 Descrição
 
 **WebSecScanner** é uma ferramenta avançada de avaliação de segurança automatizada para aplicações web, desenvolvida para identificar vulnerabilidades comuns descritas no OWASP Top 10.
+
+# Vídeo de Demonstração: [YouTube](https://youtu.be/-CXQnlKY3xE)
 
 ### ✨ Funcionalidades Principais
 
@@ -347,10 +353,6 @@ O pipeline é acionado em:
 - Diariamente às 2h AM (scan automático)
 
 Ver `.github/workflows/security_scan.yml` para detalhes.
-
-## 👥 Autor
-
-- **Anderson Franco** - Avaliação Final de Tecnologias Hacker
 
 ## 📚 Referências
 
