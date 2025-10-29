@@ -447,15 +447,22 @@ async def download_scan_report(
         media_type = "application/json"
         filename = f"scan_{scan.scan_id}.json"
     elif format == "html":
-        content = report_gen.generate_html()
+        content = report_gen._build_html_report()
         media_type = "text/html"
         filename = f"scan_{scan.scan_id}.html"
     elif format == "csv":
-        content = report_gen.generate_csv()
+        # CSV needs special handling - generate to temp file then read
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.csv') as tmp:
+            report_gen.generate_csv(tmp.name)
+            tmp_path = tmp.name
+        with open(tmp_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        os.remove(tmp_path)
         media_type = "text/csv"
         filename = f"scan_{scan.scan_id}.csv"
     elif format == "markdown":
-        content = report_gen.generate_markdown()
+        content = report_gen._build_markdown_report()
         media_type = "text/markdown"
         filename = f"scan_{scan.scan_id}.md"
     else:
