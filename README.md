@@ -1,7 +1,5 @@
 # 🛡️ WebSecScanner - Ferramenta de Avaliação de Segurança Web
 
-[![Security Scan](https://github.com/afhacker/websecscanner/workflows/Security%20Scan/badge.svg)](https://github.com/afhacker/websecscanner/actions)
-[![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://hub.docker.com/)
 [![Python](https://img.shields.io/badge/Python-3.9+-green)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -80,48 +78,71 @@
 └─────────────────────────────────────────────────────┘
 ```
 
-## 🚀 Instalação Rápida
+## 🚀 Instalação e Configuração
 
-### Opção 1: Docker (Recomendado)
+### Pré-requisitos
 
-```bash
-# Clone o repositório
-git clone https://github.com/afhacker/websecscanner.git
-cd websecscanner
+- **Python 3.9+** instalado
+- **Nmap** instalado (para reconhecimento de rede)
+  - Windows: Baixar de [nmap.org](https://nmap.org/download.html)
+  - O scanner irá procurar automaticamente em `C:\Program Files (x86)\Nmap\nmap.exe`
 
-# Execute com Docker Compose
-docker-compose up -d
-
-# Acesse o dashboard
-http://localhost:8000
-```
-
-### Opção 2: Instalação Manual
+### Instalação
 
 ```bash
 # Clone o repositório
-git clone https://github.com/afhacker/websecscanner.git
-cd websecscanner
+git clone https://github.com/Franco-junior/afhacker.git
+cd afhacker
 
-# Crie ambiente virtual
+# Crie e ative o ambiente virtual
 python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
 
-# Instale dependências
+# Windows
+venv\Scripts\activate
+
+# Linux/Mac
+source venv/bin/activate
+
+# Instale as dependências
 pip install -r requirements.txt
-
-# Execute a aplicação
-python src/app.py
 ```
+
+### Executar o Projeto
+
+```bash
+# Iniciar o servidor FastAPI
+python run.py
+
+# O servidor estará disponível em:
+# http://localhost:8000
+# Ou em http://127.0.0.1:8000
+```
+
+### Primeiro Acesso
+
+1. Acesse `http://localhost:8000` no navegador
+2. Faça login com as credenciais padrão:
+   - **Email:** `admin@websecscanner.com`
+   - **Senha:** `admin123`
+3. O usuário admin é criado automaticamente no primeiro start
 
 ## 💻 Uso
 
-### Interface Web
+### Dashboard Web
 
-Acesse `http://localhost:8000` e faça login com as credenciais padrão:
-- **Usuário:** admin@websecscanner.com
-- **Senha:** admin123
+1. Acesse `http://localhost:8000`
+2. Faça login com as credenciais padrão
+3. No painel principal você verá:
+   - **Estatísticas**: Total de varreduras, vulnerabilidades, críticas e última varredura
+   - **Iniciar Nova Varredura**: Digite a URL alvo e clique em "Iniciar Varredura"
+   - **Varreduras Recentes**: Histórico de todas as varreduras realizadas
+
+4. Para ver detalhes de uma varredura:
+   - Clique em qualquer card de varredura
+   - Navegue pelas abas:
+     - **Visão Geral**: Informações da varredura e pontuação de risco
+     - **Vulnerabilidades**: Lista detalhada com CVSS, localização e remediação
+     - **Relatórios**: Download em JSON, HTML, CSV ou Markdown
 
 ### Linha de Comando
 
@@ -129,148 +150,220 @@ Acesse `http://localhost:8000` e faça login com as credenciais padrão:
 # Scan básico
 python src/scanner.py --url https://example.com
 
-# Scan completo com todas as vulnerabilidades
-python src/scanner.py --url https://example.com --full
+# Scan completo com relatório
+python src/scanner.py --url https://example.com --output report.json
 
-# Scan específico
-python src/scanner.py --url https://example.com --tests xss,sqli,csrf
-
-# Exportar relatório
-python src/scanner.py --url https://example.com --output report.json --format json
+# Exemplo de URL de teste
+python src/scanner.py --url http://testphp.vulnweb.com
 ```
 
-### API REST
+### O que o Scanner Detecta
 
-```bash
-# Criar novo scan
-curl -X POST http://localhost:8000/api/scans \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"url": "https://example.com", "scan_type": "full"}'
+O WebSecScanner executa os seguintes módulos automaticamente:
 
-# Obter resultados
-curl http://localhost:8000/api/scans/{scan_id} \
-  -H "Authorization: Bearer YOUR_TOKEN"
-```
+1. **Nmap Scanner** (Ferramenta Externa - Conceito B)
+   - Reconhecimento de portas abertas
+   - Detecção de serviços e versões
+   - Identificação de software desatualizado
+
+2. **SQL Injection**
+   - Error-based SQLi
+   - Boolean-based SQLi
+   - Time-based SQLi
+
+3. **Cross-Site Scripting (XSS)**
+   - XSS Refletido
+   - XSS Armazenado
+   - XSS baseado em DOM
+
+4. **CSRF (Cross-Site Request Forgery)**
+   - Falta de tokens CSRF
+   - Tokens previsíveis
+
+5. **Path Traversal**
+   - Directory Traversal
+   - Local File Inclusion (LFI)
+
+6. **Command Injection**
+   - OS Command Injection
+   - Code Injection
+
+7. **Information Disclosure**
+   - Exposição de informações sensíveis
+   - Security misconfiguration
+
+## 📊 Sistema de Pontuação
+
+O WebSecScanner utiliza um sistema de pontuação de risco baseado em CVSS v3.1 com uma fórmula híbrida:
+
+**Risk Score = (Max CVSS × 40%) + (Avg CVSS × 30%) + (Weighted Count × 30%)**
+
+### Níveis de Risco
+
+- **CRITICAL** (9.0-10.0): Requer ação imediata
+- **HIGH** (7.0-8.9): Risco alto, correção prioritária
+- **MEDIUM** (4.0-6.9): Risco moderado
+- **LOW** (0.1-3.9): Risco baixo
+- **INFO** (0.0): Informativo
+
+### CVSS Score por Severidade
+
+- **CRITICAL**: 9.0-10.0
+- **HIGH**: 7.0-8.9
+- **MEDIUM**: 4.0-6.9
+- **LOW**: 2.0-3.9
+- **INFO**: 0.1-1.9
 
 ## 📊 Exemplos de Saída
 
-### JSON Report
-```json
-{
-  "scan_id": "550e8400-e29b-41d4-a716-446655440000",
-  "target_url": "https://vulnerable-app.com",
-  "scan_date": "2025-10-28T10:30:00Z",
-  "risk_score": 8.5,
-  "vulnerabilities_found": 12,
-  "vulnerabilities": [
-    {
-      "type": "SQL Injection",
-      "severity": "CRITICAL",
-      "cvss_score": 9.8,
-      "location": "/login?user=admin",
-      "payload": "' OR '1'='1",
-      "evidence": "SQL error detected",
-      "remediation": "Use parametrized queries..."
-    }
-  ]
-}
+### Dashboard Web
+
+Após uma varredura, o dashboard exibe:
+
+```
+📊 Estatísticas
+├── Total de Varreduras: 5
+├── Total de Vulnerabilidades: 12
+├── Críticas: 2
+└── Última Varredura: 28/10/2025
+
+🔍 Detalhes da Varredura
+├── URL Alvo: http://testphp.vulnweb.com
+├── Pontuação de Risco: 6.2/10.0 (Overall)
+├── Nível de Risco: HIGH
+├── Total de Vulnerabilidades: 6
+└── Duração: 45.3 segundos
+```
+
+### Terminal Output
+
+```
+🛡️  WebSecScanner v1.0.0
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Target: http://testphp.vulnweb.com
+Scan ID: 550e8400-e29b-41d4-a716-446655440000
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[*] Starting Nmap reconnaissance...
+[+] Found 3 open ports
+[!] HIGH - Outdated Software Detected
+    CVSS Score: 7.9
+
+[*] Testing for SQL Injection...
+[!] CRITICAL - SQL Injection Found
+    Location: /search.php?id=1
+    CVSS Score: 9.8
+
+[*] Testing for XSS...
+[+] 2 XSS vulnerabilities detected
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 Scan Summary:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Total Vulnerabilities: 6
+├─ CRITICAL: 1
+├─ HIGH: 1
+├─ MEDIUM: 3
+└─ LOW: 1
+
+Risk Score: 6.2/10.0 (Overall)
+Risk Level: HIGH
+
+Scan Duration: 45.3 seconds
 ```
 
 ## 🛠️ Tecnologias Utilizadas
 
-- **Backend:** Python 3.9+, FastAPI
-- **Frontend:** HTML5, CSS3, JavaScript, Chart.js
-- **Scanner:** Requests, BeautifulSoup4, urllib3
-- **Database:** SQLite (desenvolvimento), PostgreSQL (produção)
-- **Autenticação:** JWT, bcrypt
-- **Containerização:** Docker, Docker Compose
+- **Backend:** Python 3.9+, FastAPI, Uvicorn
+- **Frontend:** HTML5, CSS3, JavaScript (Vanilla)
+- **Scanner:** Requests, BeautifulSoup4, Nmap (ferramenta externa)
+- **Database:** SQLite com SQLAlchemy ORM
+- **Autenticação:** JWT (PyJWT), bcrypt
+- **Scoring:** Sistema CVSS-like customizado
 - **CI/CD:** GitHub Actions
-- **Testes:** Pytest, Coverage
 
 ## 📁 Estrutura do Projeto
 
 ```
 websecscanner/
 ├── src/
-│   ├── scanner.py                 # Scanner principal
-│   ├── report_generator.py        # Gerador de relatórios
-│   ├── app.py                     # Aplicação FastAPI
+│   ├── scanner.py                # Scanner principal e orquestração
+│   ├── report_generator.py       # Gerador de relatórios (JSON, CSV, HTML, MD)
+│   ├── app.py                    # Aplicação FastAPI + rotas da API
+│   ├── run.py                    # Script de inicialização
 │   ├── utils/
 │   │   ├── __init__.py
-│   │   ├── http_client.py        # Cliente HTTP customizado
-│   │   ├── payloads.py           # Payloads de teste
-│   │   ├── scoring.py            # Sistema de scoring
-│   │   └── auth.py               # Autenticação JWT
+│   │   ├── http_client.py       # Cliente HTTP com retry e headers
+│   │   ├── payloads.py          # Payloads de teste para vulnerabilidades
+│   │   ├── scoring.py           # Sistema de scoring CVSS-like
+│   │   └── auth.py              # Autenticação JWT e gerenciamento de usuários
 │   ├── modules/
 │   │   ├── __init__.py
-│   │   ├── sqli_scanner.py       # SQL Injection
-│   │   ├── xss_scanner.py        # Cross-Site Scripting
-│   │   ├── csrf_scanner.py       # CSRF
-│   │   ├── path_traversal.py     # Directory Traversal
-│   │   ├── command_injection.py  # Command Injection
-│   │   ├── xxe_scanner.py        # XXE
-│   │   ├── auth_scanner.py       # Broken Auth
-│   │   └── info_disclosure.py    # Info Disclosure
+│   │   ├── sqli_scanner.py      # SQL Injection (Error, Boolean, Time-based)
+│   │   ├── xss_scanner.py       # XSS (Reflected, Stored, DOM)
+│   │   ├── csrf_scanner.py      # CSRF Detection
+│   │   ├── path_traversal.py    # Directory Traversal / LFI
+│   │   ├── command_injection.py # OS Command Injection
+│   │   ├── info_disclosure.py   # Information Disclosure
+│   │   └── nmap_scanner.py      # Nmap Integration (Conceito B)
 │   ├── database/
 │   │   ├── __init__.py
-│   │   ├── models.py             # Modelos SQLAlchemy
-│   │   └── database.py           # Conexão DB
+│   │   ├── models.py            # Modelos SQLAlchemy (User, Scan, Vulnerability)
+│   │   └── database.py          # Configuração e engine do banco
 │   └── templates/
-│       ├── index.html            # Dashboard
-│       ├── login.html            # Login
-│       └── report.html           # Template de relatório
-├── tests/
-│   ├── __init__.py
-│   ├── test_scanner.py
-│   ├── test_modules.py
-│   └── test_api.py
+│       └── index.html           # Dashboard interativo (português)
 ├── docs/
-│   ├── architecture_diagram.png
-│   ├── flowchart.pdf
-│   ├── technical_report.md
-│   └── api_documentation.md
+│   ├── ARCHITECTURE.md          # Arquitetura detalhada
+│   ├── API_DOCUMENTATION.md     # Documentação da API REST
+│   ├── INSTALLATION_GUIDE.md    # Guia completo de instalação
+│   ├── VIDEO_GUIDE.md           # Roteiro para vídeo de demonstração
+│   └── RISK_SCORE_IMPROVEMENT.md # Explicação do sistema de scoring
 ├── .github/
 │   └── workflows/
-│       └── security_scan.yml
-├── Dockerfile
-├── docker-compose.yml
-├── requirements.txt
-├── .env.example
-├── .gitignore
-└── README.md
+│       └── security_scan.yml    # Pipeline CI/CD automatizado
+├── requirements.txt             # Dependências Python
+├── .env.example                 # Exemplo de variáveis de ambiente
+├── .gitignore                   # Arquivos ignorados pelo Git
+├── run.py                       # Script principal de execução
+└── README.md                    # Este arquivo
 ```
 
-## 🧪 Testes
+## 🔄 CI/CD Pipeline
 
-```bash
-# Executar todos os testes
-pytest
+O projeto inclui um pipeline automatizado via GitHub Actions que executa:
 
-# Com cobertura
-pytest --cov=src tests/
+1. **Tests**: Testes unitários e cobertura de código
+2. **Lint**: Verificação de qualidade (Black, Flake8, Pylint)
+3. **Security Scan**: Trivy e Bandit para detectar vulnerabilidades
+4. **Deploy**: Deploy automático após aprovação
 
-# Testes específicos
-pytest tests/test_scanner.py -v
-```
+O pipeline é acionado em:
+- Push para branches `main` ou `develop`
+- Pull Requests para `main`
+- Diariamente às 2h AM (scan automático)
 
-## 🔒 Segurança
+Ver `.github/workflows/security_scan.yml` para detalhes.
 
-⚠️ **AVISO IMPORTANTE:** Esta ferramenta deve ser utilizada APENAS para fins educacionais e em sistemas onde você tenha autorização explícita para realizar testes de segurança. O uso não autorizado pode ser ilegal.
+## 👥 Autor
 
-## 📄 Licença
+- **Anderson Franco** - Avaliação Final de Tecnologias Hacker
 
-Este projeto está licenciado sob a MIT License - veja o arquivo [LICENSE](LICENSE) para detalhes.
+## 🎓 Contexto Acadêmico
 
-## 👥 Autores
+Este projeto foi desenvolvido como trabalho final da disciplina **Tecnologias Hackers**, atendendo aos requisitos para **Conceito A**:
 
-- **Franco** - Desenvolvimento e Arquitetura - [@afhacker](https://github.com/afhacker)
+✅ Detecção de vulnerabilidades OWASP Top 10  
+✅ Dashboard interativo com autenticação  
+✅ Sistema de scoring avançado (CVSS-like)  
+✅ Relatórios profissionais em múltiplos formatos  
+✅ Integração com ferramenta externa (Nmap) - **Conceito B**  
+✅ Containerização e CI/CD  
+✅ Documentação completa  
 
-## 🙏 Agradecimentos
-
-- OWASP Foundation
-- Comunidade de Segurança da Informação
-- Contribuidores Open Source
 
 ## 📚 Referências
 
@@ -278,7 +371,3 @@ Este projeto está licenciado sob a MIT License - veja o arquivo [LICENSE](LICEN
 - [OWASP ZAP](https://www.zaproxy.org/)
 - [CVSS v3.1](https://www.first.org/cvss/)
 - [CWE Top 25](https://cwe.mitre.org/top25/)
-
----
-
-**⭐ Se este projeto foi útil, considere dar uma estrela no GitHub!**
