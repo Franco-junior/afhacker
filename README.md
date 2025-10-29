@@ -352,19 +352,6 @@ Ver `.github/workflows/security_scan.yml` para detalhes.
 
 - **Anderson Franco** - Avaliação Final de Tecnologias Hacker
 
-## 🎓 Contexto Acadêmico
-
-Este projeto foi desenvolvido como trabalho final da disciplina **Tecnologias Hackers**, atendendo aos requisitos para **Conceito A**:
-
-✅ Detecção de vulnerabilidades OWASP Top 10  
-✅ Dashboard interativo com autenticação  
-✅ Sistema de scoring avançado (CVSS-like)  
-✅ Relatórios profissionais em múltiplos formatos  
-✅ Integração com ferramenta externa (Nmap) - **Conceito B**  
-✅ Containerização e CI/CD  
-✅ Documentação completa  
-
-
 ## 📚 Referências
 
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/)
