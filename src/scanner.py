@@ -4,11 +4,14 @@ Coordinates all vulnerability scanning modules
 """
 import logging
 import argparse
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional
 import json
 import sys
 from urllib.parse import urlparse
+
+# Timezone de Brasília (UTC-3)
+BRAZIL_TZ = timezone(timedelta(hours=-3))
 
 from utils.http_client import HTTPClient, URLAnalyzer
 from utils.scoring import calculate_overall_risk_score
@@ -100,7 +103,7 @@ class SecurityScanner:
         
         # Perform scans
         all_vulnerabilities = []
-        scan_start_time = datetime.now()
+        scan_start_time = datetime.now(BRAZIL_TZ)
         
         # STEP 1: Network reconnaissance with Nmap (if available)
         logger.info(f"\n[+] Running NMAP reconnaissance...")
@@ -150,7 +153,7 @@ class SecurityScanner:
                 logger.error(f"Error in {scan_type} scan: {e}")
                 continue
         
-        scan_end_time = datetime.now()
+        scan_end_time = datetime.now(BRAZIL_TZ)
         scan_duration = (scan_end_time - scan_start_time).total_seconds()
         
         # Calculate overall risk
@@ -158,7 +161,7 @@ class SecurityScanner:
         
         # Build result
         result = {
-            'scan_id': datetime.now().strftime('%Y%m%d_%H%M%S'),
+            'scan_id': datetime.now(BRAZIL_TZ).strftime('%Y%m%d_%H%M%S'),
             'target_url': url,
             'scan_date': scan_start_time.isoformat(),
             'scan_duration': scan_duration,
@@ -202,7 +205,7 @@ class SecurityScanner:
         return {
             'error': True,
             'message': error_message,
-            'scan_date': datetime.now().isoformat()
+            'scan_date': datetime.now(BRAZIL_TZ).isoformat()
         }
     
     def _print_summary(self, result: Dict):
