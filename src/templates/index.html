@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSecScanner - Painel de Segurança</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        header h1 {
+            font-size: 2em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-card h3 {
+            color: #667eea;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }
+        
+        .stat-card .value {
+            font-size: 3em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .stat-card .label {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .scan-section {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .scan-section h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .scan-form {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        input[type="text"], input[type="url"], input[type="email"], input[type="password"] {
+            flex: 1;
+            min-width: 300px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .scans-list {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .scan-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+        
+        .scan-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .scan-item.CRITICAL {
+            border-left-color: #dc3545;
+        }
+        
+        .scan-item.HIGH {
+            border-left-color: #fd7e14;
+        }
+        
+        .scan-item.MEDIUM {
+            border-left-color: #ffc107;
+        }
+        
+        .scan-item.LOW {
+            border-left-color: #28a745;
+        }
+        
+        .risk-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85em;
+            text-transform: uppercase;
+        }
+        
+        .risk-badge.CRITICAL {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .risk-badge.HIGH {
+            background: #fd7e14;
+            color: white;
+        }
+        
+        .risk-badge.MEDIUM {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .risk-badge.LOW {
+            background: #28a745;
+            color: white;
+        }
+        
+        .risk-badge.INFO {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-content h2 {
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .close {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .close:hover {
+            color: #333;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .scan-item {
+            cursor: pointer;
+        }
+        
+        .scan-item:active {
+            transform: scale(0.98);
+        }
+        
+        .modal-large {
+            max-width: 900px;
+        }
+        
+        .vuln-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .vuln-card.CRITICAL {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+        
+        .vuln-card.HIGH {
+            border-left-color: #fd7e14;
+            background: #fff8f0;
+        }
+        
+        .vuln-card.MEDIUM {
+            border-left-color: #ffc107;
+            background: #fffbf0;
+        }
+        
+        .vuln-card.LOW {
+            border-left-color: #28a745;
+            background: #f0fff4;
+        }
+        
+        .vuln-card h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .vuln-detail {
+            font-size: 0.9em;
+            color: #666;
+            margin: 5px 0;
+        }
+        
+        .vuln-evidence {
+            background: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin-top: 10px;
+            word-break: break-all;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .tab-button {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab-button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .download-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .download-btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .download-btn:hover {
+            background: #5568d3;
+        }
+        
+        #auth-section {
+            display: none;
+        }
+        
+        #dashboard-section {
+            display: none;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 30px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Auth Section -->
+        <div id="auth-section">
+            <header>
+                <h1>🛡️ WebSecScanner</h1>
+            </header>
+            
+            <div class="scan-section">
+                <h2>Entrar na sua Conta</h2>
+                <div id="auth-message"></div>
+                
+                <form id="login-form" class="scan-form">
+                    <div class="form-group" style="width: 100%;">
+                        <label>Email</label>
+                        <input type="email" id="login-email" required placeholder="admin@websecscanner.com">
+                    </div>
+                    <div class="form-group" style="width: 100%;">
+                        <label>Senha</label>
+                        <input type="password" id="login-password" required placeholder="admin123">
+                    </div>
+                    <button type="submit">Entrar</button>
+                </form>
+                
+                <p style="margin-top: 20px; text-align: center; color: #666;">
+                    Credenciais padrão: admin@websecscanner.com / admin123
+                </p>
+            </div>
+        </div>
+        
+        <!-- Dashboard Section -->
+        <div id="dashboard-section">
+            <header>
+                <div>
+                    <h1>🛡️ WebSecScanner</h1>
+                    <p style="color: #666; margin-top: 5px;">Painel de Segurança</p>
+                </div>
+                <button id="logout-btn" class="btn-secondary">Sair</button>
+            </header>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total de Varreduras</h3>
+                    <div class="value" id="total-scans">0</div>
+                    <div class="label">Varreduras concluídas</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total de Vulnerabilidades</h3>
+                    <div class="value" id="total-vulns">0</div>
+                    <div class="label">Problemas encontrados</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Críticas</h3>
+                    <div class="value" id="critical-vulns" style="color: #dc3545;">0</div>
+                    <div class="label">Requer atenção imediata</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Última Varredura</h3>
+                    <div class="value" style="font-size: 1.5em;" id="last-scan">Nunca</div>
+                    <div class="label">Atividade mais recente</div>
+                </div>
+            </div>
+            
+            <div class="scan-section">
+                <h2>🔍 Iniciar Nova Varredura</h2>
+                <div id="scan-message"></div>
+                <form id="scan-form" class="scan-form">
+                    <input type="url" id="target-url" placeholder="https://exemplo.com" required>
+                    <button type="submit">Iniciar Varredura</button>
+                </form>
+            </div>
+            
+            <div class="scan-section">
+                <h2>📊 Varreduras Recentes</h2>
+                <div id="scans-list" class="scans-list">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Carregando varreduras...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scan Details Modal -->
+    <div id="scan-details-modal" class="modal">
+        <div class="modal-content modal-large">
+            <span class="close" onclick="closeScanDetails()">&times;</span>
+            <h2 id="scan-details-title">Detalhes da Varredura</h2>
+            
+            <div class="tab-buttons">
+                <button class="tab-button active" onclick="switchTab('overview')">Visão Geral</button>
+                <button class="tab-button" onclick="switchTab('vulnerabilities')">Vulnerabilidades</button>
+                <button class="tab-button" onclick="switchTab('reports')">Relatórios</button>
+            </div>
+            
+            <div id="tab-overview" class="tab-content active">
+                <div id="scan-overview"></div>
+            </div>
+            
+            <div id="tab-vulnerabilities" class="tab-content">
+                <div id="scan-vulnerabilities"></div>
+            </div>
+            
+            <div id="tab-reports" class="tab-content">
+                <h3>Baixar Relatórios</h3>
+                <p>Exporte os resultados da varredura no formato de sua preferência:</p>
+                <div class="download-buttons" id="download-buttons"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let authToken = localStorage.getItem('authToken');
+        
+        // Check authentication
+        if (authToken) {
+            showDashboard();
+        } else {
+            showAuth();
+        }
+        
+        function showAuth() {
+            document.getElementById('auth-section').style.display = 'block';
+            document.getElementById('dashboard-section').style.display = 'none';
+        }
+        
+        function showDashboard() {
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('dashboard-section').style.display = 'block';
+            loadDashboard();
+        }
+        
+        // Login form
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    authToken = data.access_token;
+                    localStorage.setItem('authToken', authToken);
+                    showDashboard();
+                } else {
+                    showMessage('auth-message', 'Credenciais inválidas', 'error');
+                }
+            } catch (error) {
+                showMessage('auth-message', 'Falha no login', 'error');
+            }
+        });
+        
+        // Logout
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            localStorage.removeItem('authToken');
+            authToken = null;
+            showAuth();
+        });
+        
+        // Scan form
+        document.getElementById('scan-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const targetUrl = document.getElementById('target-url').value;
+            
+            try {
+                const response = await fetch('/api/scans', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ target_url: targetUrl })
+                });
+                
+                if (response.ok) {
+                    showMessage('scan-message', 'Varredura iniciada com sucesso!', 'success');
+                    document.getElementById('target-url').value = '';
+                    setTimeout(() => loadScans(), 2000);
+                } else {
+                    showMessage('scan-message', 'Falha ao iniciar varredura', 'error');
+                }
+            } catch (error) {
+                showMessage('scan-message', 'Erro ao iniciar varredura', 'error');
+            }
+        });
+        
+        async function loadDashboard() {
+            try {
+                const response = await fetch('/api/dashboard/stats', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('total-scans').textContent = data.total_scans;
+                    document.getElementById('total-vulns').textContent = data.total_vulnerabilities;
+                    document.getElementById('critical-vulns').textContent = data.critical_vulnerabilities;
+                    
+                    if (data.recent_scans.length > 0) {
+                        const lastScan = new Date(data.recent_scans[0].scan_date);
+                        document.getElementById('last-scan').textContent = lastScan.toLocaleDateString();
+                    }
+                }
+                
+                loadScans();
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+        
+        async function loadScans() {
+            try {
+                const response = await fetch('/api/scans', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    const scans = await response.json();
+                    displayScans(scans);
+                }
+            } catch (error) {
+                console.error('Error loading scans:', error);
+            }
+        }
+        
+        function displayScans(scans) {
+            const container = document.getElementById('scans-list');
+            
+            if (scans.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666;">Nenhuma varredura ainda. Inicie sua primeira varredura acima!</p>';
+                return;
+            }
+            
+            container.innerHTML = scans.map(scan => `
+                <div class="scan-item ${scan.risk_level}" onclick="openScanDetails(${scan.id})" style="cursor: pointer;">
+                    <div>
+                        <strong>${scan.target_url}</strong><br>
+                        <small style="color: #666;">
+                            ${new Date(scan.scan_date).toLocaleString('pt-BR')} • 
+                            ${scan.vulnerabilities_found} vulnerabilidades • 
+                            Status: ${scan.scan_status}
+                        </small>
+                    </div>
+                    <div>
+                        <span class="risk-badge ${scan.risk_level}">${scan.risk_level}</span>
+                        <span style="margin-left: 10px; font-weight: bold;">${scan.risk_score.toFixed(1)}/10</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        async function openScanDetails(scanId) {
+            try {
+                const response = await fetch(`/api/scans/${scanId}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (!response.ok) {
+                    alert('Erro ao carregar detalhes da varredura');
+                    return;
+                }
+                
+                const scan = await response.json();
+                
+                // Update modal title
+                document.getElementById('scan-details-title').textContent = `Varredura: ${scan.target_url}`;
+                
+                // Overview tab
+                document.getElementById('scan-overview').innerHTML = `
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px;">
+                        <div>
+                            <strong>URL Alvo:</strong><br>${scan.target_url}
+                        </div>
+                        <div>
+                            <strong>ID da Varredura:</strong><br>${scan.scan_id}
+                        </div>
+                        <div>
+                            <strong>Status:</strong><br>
+                            <span class="risk-badge ${scan.scan_status === 'COMPLETED' ? 'LOW' : 'MEDIUM'}">${scan.scan_status}</span>
+                        </div>
+                        <div>
+                            <strong>Pontuação de Risco:</strong><br>
+                            <span style="font-size: 1.5em; font-weight: bold;">${scan.risk_score.toFixed(1)}/10</span>
+                        </div>
+                        <div>
+                            <strong>Nível de Risco:</strong><br>
+                            <span class="risk-badge ${scan.risk_level}">${scan.risk_level}</span>
+                        </div>
+                        <div>
+                            <strong>Data da Varredura:</strong><br>${new Date(scan.scan_date).toLocaleString('pt-BR')}
+                        </div>
+                        <div>
+                            <strong>Total de Vulnerabilidades:</strong><br>${scan.vulnerabilities_found}
+                        </div>
+                        <div>
+                            <strong>Duração:</strong><br>${scan.scan_duration || 'N/A'}
+                        </div>
+                    </div>
+                `;
+                
+                // Vulnerabilities tab
+                const vulnsByType = {};
+                scan.vulnerabilities.forEach(v => {
+                    if (!vulnsByType[v.vulnerability_type]) {
+                        vulnsByType[v.vulnerability_type] = [];
+                    }
+                    vulnsByType[v.vulnerability_type].push(v);
+                });
+                
+                let vulnsHTML = '';
+                if (scan.vulnerabilities.length === 0) {
+                    vulnsHTML = '<p style="text-align: center; color: #666;">Nenhuma vulnerabilidade encontrada 🎉</p>';
+                } else {
+                    vulnsHTML = Object.entries(vulnsByType).map(([type, vulns]) => `
+                        <h3 style="margin-top: 20px; color: #667eea;">${type} (${vulns.length})</h3>
+                        ${vulns.map(v => `
+                            <div class="vuln-card ${v.severity}">
+                                <div style="display: flex; justify-content: space-between; align-items: start;">
+                                    <h4>${v.title}</h4>
+                                    <span class="risk-badge ${v.severity}">${v.severity}</span>
+                                </div>
+                                <div class="vuln-detail"><strong>CVSS Score:</strong> ${v.cvss_score ? v.cvss_score.toFixed(1) : 'N/A'}/10</div>
+                                <div class="vuln-detail"><strong>Localização:</strong> ${v.location}</div>
+                                ${v.description ? `<div class="vuln-detail"><strong>Descrição:</strong> ${v.description}</div>` : ''}
+                                ${v.evidence ? `
+                                    <div class="vuln-detail"><strong>Evidência:</strong></div>
+                                    <div class="vuln-evidence">${v.evidence.substring(0, 200)}${v.evidence.length > 200 ? '...' : ''}</div>
+                                ` : ''}
+                                ${v.remediation ? `<div class="vuln-detail" style="margin-top: 10px;"><strong>🔧 Remediação:</strong> ${v.remediation}</div>` : ''}
+                            </div>
+                        `).join('')}
+                    `).join('');
+                }
+                document.getElementById('scan-vulnerabilities').innerHTML = vulnsHTML;
+                
+                // Reports tab - download buttons with authentication
+                document.getElementById('download-buttons').innerHTML = `
+                    <button onclick="downloadReport(${scanId}, 'json')" class="download-btn">📄 Relatório JSON</button>
+                    <button onclick="downloadReport(${scanId}, 'html')" class="download-btn">🌐 Relatório HTML</button>
+                    <button onclick="downloadReport(${scanId}, 'csv')" class="download-btn">📊 Relatório CSV</button>
+                    <button onclick="downloadReport(${scanId}, 'markdown')" class="download-btn">📝 Relatório Markdown</button>
+                `;
+                
+                // Show modal
+                document.getElementById('scan-details-modal').style.display = 'flex';
+            } catch (error) {
+                console.error('Error loading scan details:', error);
+                alert('Erro ao carregar detalhes da varredura: ' + error.message);
+            }
+        }
+        
+        function closeScanDetails() {
+            document.getElementById('scan-details-modal').style.display = 'none';
+        }
+        
+        async function downloadReport(scanId, format) {
+            try {
+                const response = await fetch(`/api/scans/${scanId}/report?format=${format}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    alert(`Erro ao baixar relatório: ${response.statusText}`);
+                    return;
+                }
+                
+                // Get the blob from response
+                const blob = await response.blob();
+                
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                
+                // Set filename based on format
+                const extensions = {
+                    'json': 'json',
+                    'html': 'html',
+                    'csv': 'csv',
+                    'markdown': 'md'
+                };
+                a.download = `scan_report_${scanId}.${extensions[format]}`;
+                
+                // Trigger download
+                document.body.appendChild(a);
+                a.click();
+                
+                // Cleanup
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+            } catch (error) {
+                console.error('Error downloading report:', error);
+                alert('Erro ao baixar relatório: ' + error.message);
+            }
+        }
+        
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById('tab-' + tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('scan-details-modal');
+            if (event.target === modal) {
+                closeScanDetails();
+            }
+        }
+        
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => {
+                element.innerHTML = '';
+            }, 5000);
+        }
+        
+        // Auto-refresh scans every 10 seconds
+        setInterval(() => {
+            if (authToken && document.getElementById('dashboard-section').style.display !== 'none') {
+                loadScans();
+            }
+        }, 10000);
+    </script>
+</body>
+</html>
